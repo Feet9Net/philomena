@@ -12,7 +12,7 @@ elixir:
         ' posted
       button.button#js-refresh-comments title="Refresh" data-disable-with="..."
         i.fa.fa-sync
-        span.hide-mobile<> Refresh
+        span.hidden--mobile<> Refresh
 
 = for {comment, body} <- @comments, can_view_communication?(@conn, comment) do
   = render PhilomenaWeb.CommentView, "_comment.html", comment: comment, body: body, conn: @conn

@@ -68,6 +68,7 @@ export default {
   mode: isDevelopment ? 'development' : 'production',
   entry: {
     'js/app.js': './js/app.js',
+    'css/application': './css/application.scss',
     ...themes
   },
   output: {
@@ -84,6 +85,8 @@ export default {
   performance: { hints: false },
   resolve: {
     alias: {
+      elements: path.resolve(__dirname, 'css/elements/'),
+      themes: path.resolve(__dirname, 'css/themes/'),
       common: path.resolve(__dirname, 'css/common/'),
       views: path.resolve(__dirname, 'css/views/')
     }
@@ -117,7 +120,7 @@ export default {
         ],
       },
       {
-        test: /\.scss$/,
+        test: /(themes\/[a-z\-]+\.scss|application.scss)$/,
         use: [
           MiniCssExtractPlugin.loader,
           {
