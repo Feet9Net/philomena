@@ -1,68 +1,62 @@
 .block__header
   = @pagination
 
-= if reverts_tag_changes?(@conn) do
-  .block__header.block__header--light.block__header--sub
-    a data-click-checkall=".tag-changes-form"
-      i.fa.fa-check>
-      ' Toggle all
+.block__content
+  table.table
+    thead
+      tr
+        = if reverts_tag_changes?(@conn) do
+          th State
+          th Actions
+        th colspan=2 Image
+        th Timestamp
+        th User
+        th.tag-change-block Tags
 
-= form_for :tag_changes, Routes.tag_change_revert_path(@conn, :create), [class: "tag-changes-form"], fn _f ->
-  .block__content
-    table.table
-      thead
+    tbody
+      = for batch <- @batches do
         tr
           = if reverts_tag_changes?(@conn) do
-            th Revert?
-          th colspan=2 Image
-          th Tag
-          th Action
-          th Timestamp
-          th User
-
-      tbody
-        = for tag_change <- @tag_changes do
-          tr
-            = if reverts_tag_changes?(@conn) do
-              td.center
-                input type="checkbox" name="ids[]" value=tag_change.id
-
-            td.center
-              = link tag_change.image_id, to: Routes.image_path(@conn, :show, tag_change.image)
-            td.center
-              = render PhilomenaWeb.ImageView, "_image_container.html", image: tag_change.image, size: :thumb_tiny, conn: @conn
-
+            td class=state_class(batch)
+              = state_name(batch)
             td
-              = if tag_change.tag do
-                = render PhilomenaWeb.TagView, "_tag.html", tag: tag_change.tag, conn: @conn
-              - else
-                = tag_change.tag_name_cache || "Unknown tag"
+              = if can_reject?(batch) do
+                = button_to "Reject", Routes.tag_change_revert_path(@conn, :create, batch_id: batch.id), method: "post", class: "button"
 
-            = if tag_change.added do
-              td.success Added
-            - else
-              td.danger Removed
+          td.center
+            = link batch.image_id, to: Routes.image_path(@conn, :show, batch.image)
+          td.center
+            = render PhilomenaWeb.ImageView, "_image_container.html", image: batch.image, size: :thumb_tiny, conn: @conn
 
-            td
-              = pretty_time(tag_change.created_at)
+          td
+            = pretty_time(batch.created_at)
 
-            td class=user_column_class(tag_change)
-              => render PhilomenaWeb.UserAttributionView, "_anon_user.html", object: tag_change, conn: @conn
+          td class=user_column_class(batch)
+            => render PhilomenaWeb.UserAttributionView, "_anon_user.html", object: batch, conn: @conn
 
-              = if can?(@conn, :show, :ip_address) do
-                => link_to_ip @conn, tag_change.ip
-                => link_to_fingerprint @conn, tag_change.fingerprint
+            = if can?(@conn, :show, :ip_address) do
+              => link_to_ip @conn, batch.ip
+              => link_to_fingerprint @conn, batch.fingerprint
 
-              = if staff?(tag_change) do
+            = if staff?(batch) do
+              br
+              small
+                strong> Stop!
+                ' This user is a staff member.
                 br
-                small
-                  strong> Stop!
-                  ' This user is a staff member.
-                  br
-                  ' Ask them before reverting their changes.
+                ' Ask them before reverting their changes.
 
-  .block__header
-    = @pagination
+          td
+            = if Enum.any?(batch.added_tag_changes) do
+              h5 Added
+              div.success.tag-batch
+                = for tag_change <- batch.added_tag_changes do
+                  = render PhilomenaWeb.TagView, "_tag.html", tag: tag_change.tag, conn: @conn
+            = if Enum.any?(batch.removed_tag_changes) do
+              h5 Removed
+              div.danger.tag-batch
+                = for tag_change <- batch.removed_tag_changes do
+                  = render PhilomenaWeb.TagView, "_tag.html", tag: tag_change.tag, conn: @conn
 
-  = if reverts_tag_changes?(@conn) do
-    = submit "Revert selected", class: "button", data: [confirm: "Are you really, really sure?"]
+.block__header
+  = @pagination

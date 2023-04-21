@@ -10,7 +10,8 @@ defmodule Philomena.TagChanges do
   alias Philomena.TagChanges.TagChange
   alias Philomena.Images.Tagging
   alias Philomena.Tags.Tag
-  alias Philomena.Images
+  alias Philomena.{Images, Images.Image, Images.Tagging}
+  alias Ecto.Multi
 
   # TODO: this is substantially similar to Images.batch_update/4.
   # Perhaps it should be extracted.
@@ -188,5 +189,196 @@ defmodule Philomena.TagChanges do
   """
   def change_tag_change(%TagChange{} = tag_change) do
     TagChange.changeset(tag_change, %{})
+  end
+
+  alias Philomena.TagChanges.Batch
+
+  def tag_change_batches_image(%Image{id: image_id}, committed_only?) do
+    Batch
+    |> where(image_id: ^image_id)
+    |> maybe_filter_uncommitted(committed_only?)
+    |> order_by(desc: :created_at)
+  end
+
+  def tag_change_batches_fingerprint(fingerprint, committed_only?) do
+    Batch
+    |> where(fingerprint: ^fingerprint)
+    |> maybe_filter_uncommitted(committed_only?)
+    |> order_by(desc: :created_at)
+  end
+
+  def tag_change_batches_ip(cidr, committed_only?) do
+    {:ok, inet} = EctoNetwork.INET.cast(cidr)
+
+    Batch
+    |> where(fragment("ip >>= ?", ^inet))
+    |> maybe_filter_uncommitted(committed_only?)
+    |> order_by(desc: :created_at)
+  end
+
+  defp maybe_filter_uncommitted(query, true),
+    do: where(query, state: "committed")
+
+  defp maybe_filter_uncommitted(query, _), do: query
+
+  def revert_batch(%Batch{state: "uncommitted"} = batch) do
+    # If the batch is uncommitted, then it hasn't been applied and we can just mark it as rejected.
+    batch
+    |> Batch.reject_changeset()
+    |> Repo.update()
+  end
+
+  def revert_batch(%Batch{} = batch) do
+    # We need to reverse the changes from the batch on this image.
+    batch_changeset = Batch.reject_changeset(batch)
+
+    # Calculate taggings to add as the batch's removed tags.
+    taggings_to_add =
+      batch.removed_tag_changes
+      |> Enum.map(&%{image_id: batch.image_id, tag_id: &1.tag_id})
+
+    # Calculate taggings to remove as the batch's added tags.
+    tag_ids_to_remove = Enum.map(batch.added_tag_changes, &(&1.tag_id))
+    taggings_to_remove =
+      Tagging
+      |> where([tc], tc.image_id == ^batch.image_id)
+      |> where([tc], tc.tag_id in ^tag_ids_to_remove)
+      |> select([tc], tc.tag_id)
+
+    # Get the image during the transaction, so we know whether to update the tag counters.
+    image_query = where(Image, id: ^batch.image_id)
+
+    # Perform the transaction, avoiding creating tag change entries.
+    Multi.new()
+    |> Multi.update(:batch, batch_changeset)
+    |> Multi.one(:image, image_query)
+    |> Multi.run(:add_tags, fn repo, %{image: %{hidden_from_users: hidden}} ->
+      # Insert the new taggings, returning which tag_ids were actually added.
+      {_count, taggings} =
+        repo.insert_all(Tagging, taggings_to_add, on_conflict: :nothing, returning: [:tag_id])
+
+      # Update the image count on the tags which were added.
+      if not hidden do
+        tag_ids = Enum.map(taggings, &(&1.tag_id))
+
+        Tag
+        |> where([t], t.id in ^tag_ids)
+        |> repo.update_all(inc: [images_count: 1])
+      end
+
+      # We succeeded.
+      {:ok, 0}
+    end)
+    |> Multi.run(:remove_tags, fn repo, %{image: %{hidden_from_users: hidden}} ->
+      # Delete the existing tags, returning which tag_ids were actually removed.
+      {_count, taggings} =
+        repo.delete_all(taggings_to_remove)
+
+      # Update the image count on the tags which were removed.
+      if not hidden do
+
+        tag_ids = Enum.map(taggings, &(&1.tag_id))
+
+        Tag
+        |> where([t], t.id in ^tag_ids)
+        |> repo.update_all(inc: [images_count: -1])
+      end
+
+      # We succeeded.
+      {:ok, 0}
+    end)
+    |> Repo.transaction()
+    |> case do
+      {:ok, %{batch: batch}} ->
+        {:ok, batch}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Gets a single batch.
+
+  Raises `Ecto.NoResultsError` if the Batch does not exist.
+
+  ## Examples
+
+      iex> get_batch!(123)
+      %Batch{}
+
+      iex> get_batch!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_batch!(id) do
+    Batch
+    |> preload([added_tag_changes: :tag, removed_tag_changes: :tag])
+    |> Repo.get!(id)
+  end
+
+  @doc """
+  Creates a batch.
+
+  ## Examples
+
+      iex> create_batch(%{field: value})
+      {:ok, %Batch{}}
+
+      iex> create_batch(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_batch(attrs \\ %{}) do
+    %Batch{}
+    |> Batch.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a batch.
+
+  ## Examples
+
+      iex> update_batch(batch, %{field: new_value})
+      {:ok, %Batch{}}
+
+      iex> update_batch(batch, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_batch(%Batch{} = batch, attrs) do
+    batch
+    |> Batch.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a batch.
+
+  ## Examples
+
+      iex> delete_batch(batch)
+      {:ok, %Batch{}}
+
+      iex> delete_batch(batch)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_batch(%Batch{} = batch) do
+    Repo.delete(batch)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking batch changes.
+
+  ## Examples
+
+      iex> change_batch(batch)
+      %Ecto.Changeset{data: %Batch{}}
+
+  """
+  def change_batch(%Batch{} = batch, attrs \\ %{}) do
+    Batch.changeset(batch, attrs)
   end
 end

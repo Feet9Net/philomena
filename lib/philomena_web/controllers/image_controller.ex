@@ -175,7 +175,7 @@ defmodule PhilomenaWeb.ImageController do
       |> join(
         :inner_lateral,
         [i],
-        _ in fragment("SELECT COUNT(*) FROM tag_changes t WHERE t.image_id = ?", i.id)
+        _ in fragment("SELECT COUNT(*) FROM tag_change_batches t WHERE t.image_id = ? AND t.state = 'committed'", i.id)
       )
       |> join(
         :inner_lateral,

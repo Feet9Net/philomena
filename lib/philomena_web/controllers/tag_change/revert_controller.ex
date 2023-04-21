@@ -7,21 +7,13 @@ defmodule PhilomenaWeb.TagChange.RevertController do
   plug :verify_authorized
   plug PhilomenaWeb.UserAttributionPlug
 
-  def create(conn, %{"ids" => ids}) when is_list(ids) do
-    attributes = conn.assigns.attributes
+  def create(conn, %{"batch_id" => batch_id}) do
+    batch = TagChanges.get_batch!(batch_id)
 
-    attributes = %{
-      ip: attributes[:ip],
-      fingerprint: attributes[:fingerprint],
-      referrer: attributes[:referrer],
-      user_agent: attributes[:referrer],
-      user_id: attributes[:user].id
-    }
-
-    case TagChanges.mass_revert(ids, attributes) do
-      {:ok, tag_changes} ->
+    case TagChanges.revert_batch(batch) do
+      {:ok, _} ->
         conn
-        |> put_flash(:info, "Successfully reverted #{length(tag_changes)} tag changes.")
+        |> put_flash(:info, "Successfully reverted batch of tag changes.")
         |> redirect(external: conn.assigns.referrer)
 
       _error ->

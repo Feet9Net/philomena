@@ -2,8 +2,8 @@
 -- PostgreSQL database dump
 --
 
--- Dumped from database version 14.1
--- Dumped by pg_dump version 14.1
+-- Dumped from database version 15.2
+-- Dumped by pg_dump version 15.2
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -1554,6 +1554,40 @@ ALTER SEQUENCE public.subnet_bans_id_seq OWNED BY public.subnet_bans.id;
 
 
 --
+-- Name: tag_change_batches; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.tag_change_batches (
+    id bigint NOT NULL,
+    created_at timestamp(0) without time zone NOT NULL,
+    image_id bigint NOT NULL,
+    user_id bigint,
+    state character varying(255) NOT NULL,
+    fingerprint character varying(255),
+    ip inet
+);
+
+
+--
+-- Name: tag_change_batches_id_seq; Type: SEQUENCE; Schema: public; Owner: -
+--
+
+CREATE SEQUENCE public.tag_change_batches_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+--
+-- Name: tag_change_batches_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: -
+--
+
+ALTER SEQUENCE public.tag_change_batches_id_seq OWNED BY public.tag_change_batches.id;
+
+
+--
 -- Name: tag_changes; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -1569,7 +1603,8 @@ CREATE TABLE public.tag_changes (
     updated_at timestamp without time zone NOT NULL,
     user_id integer,
     tag_id integer,
-    image_id integer NOT NULL
+    image_id integer NOT NULL,
+    tag_change_batch_id bigint
 );
 
 
@@ -2385,6 +2420,13 @@ ALTER TABLE ONLY public.subnet_bans ALTER COLUMN id SET DEFAULT nextval('public.
 
 
 --
+-- Name: tag_change_batches id; Type: DEFAULT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_change_batches ALTER COLUMN id SET DEFAULT nextval('public.tag_change_batches_id_seq'::regclass);
+
+
+--
 -- Name: tag_changes id; Type: DEFAULT; Schema: public; Owner: -
 --
 
@@ -2769,6 +2811,14 @@ ALTER TABLE ONLY public.static_pages
 
 ALTER TABLE ONLY public.subnet_bans
     ADD CONSTRAINT subnet_bans_pkey PRIMARY KEY (id);
+
+
+--
+-- Name: tag_change_batches tag_change_batches_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_change_batches
+    ADD CONSTRAINT tag_change_batches_pkey PRIMARY KEY (id);
 
 
 --
@@ -4115,6 +4165,48 @@ CREATE INDEX reports_system_index ON public.reports USING btree (system) WHERE (
 
 
 --
+-- Name: tag_change_batches_fingerprint_created_at_desc_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_change_batches_fingerprint_created_at_desc_index ON public.tag_change_batches USING btree (fingerprint, created_at DESC);
+
+
+--
+-- Name: tag_change_batches_image_id_created_at_desc_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_change_batches_image_id_created_at_desc_index ON public.tag_change_batches USING btree (image_id, created_at DESC);
+
+
+--
+-- Name: tag_change_batches_ip_inet_ops_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_change_batches_ip_inet_ops_index ON public.tag_change_batches USING gist (ip inet_ops);
+
+
+--
+-- Name: tag_change_batches_state_created_at_desc_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_change_batches_state_created_at_desc_index ON public.tag_change_batches USING btree (state, created_at DESC) WHERE ((state)::text = 'unconfirmed'::text);
+
+
+--
+-- Name: tag_change_batches_user_id_created_at_desc_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_change_batches_user_id_created_at_desc_index ON public.tag_change_batches USING btree (user_id, created_at DESC);
+
+
+--
+-- Name: tag_changes_tag_change_batch_id_added_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX tag_changes_tag_change_batch_id_added_index ON public.tag_changes USING btree (tag_change_batch_id, added);
+
+
+--
 -- Name: user_tokens_context_token_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -4953,6 +5045,30 @@ ALTER TABLE ONLY public.moderation_logs
 
 
 --
+-- Name: tag_change_batches tag_change_batches_image_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_change_batches
+    ADD CONSTRAINT tag_change_batches_image_id_fkey FOREIGN KEY (image_id) REFERENCES public.images(id) ON DELETE CASCADE;
+
+
+--
+-- Name: tag_change_batches tag_change_batches_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_change_batches
+    ADD CONSTRAINT tag_change_batches_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(id) ON DELETE CASCADE;
+
+
+--
+-- Name: tag_changes tag_changes_tag_change_batch_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.tag_changes
+    ADD CONSTRAINT tag_changes_tag_change_batch_id_fkey FOREIGN KEY (tag_change_batch_id) REFERENCES public.tag_change_batches(id) ON DELETE CASCADE;
+
+
+--
 -- Name: user_tokens user_tokens_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -4991,3 +5107,4 @@ INSERT INTO public."schema_migrations" (version) VALUES (20210929181319);
 INSERT INTO public."schema_migrations" (version) VALUES (20211107130226);
 INSERT INTO public."schema_migrations" (version) VALUES (20211219194836);
 INSERT INTO public."schema_migrations" (version) VALUES (20220321173359);
+INSERT INTO public."schema_migrations" (version) VALUES (20230421185233);

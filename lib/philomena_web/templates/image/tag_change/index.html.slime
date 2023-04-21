@@ -5,16 +5,6 @@ h1
     = @image.id
 
 - route = fn p -> Routes.image_tag_change_path(@conn, :index, @image, p) end
-- params = if @conn.params["added"], do: [added: @conn.params["added"]]
-- pagination = render PhilomenaWeb.PaginationView, "_pagination.html", page: @tag_changes, route: route, conn: @conn, params: params
+- pagination = render PhilomenaWeb.PaginationView, "_pagination.html", page: @batches, route: route, conn: @conn
 
-.block
-  .block__header
-    span.block__header__title
-      | Display only:
-
-    = link "Removed", to: Routes.image_tag_change_path(@conn, :index, @image, added: 0)
-    = link "Added", to: Routes.image_tag_change_path(@conn, :index, @image, added: 1)
-    = link "All", to: Routes.image_tag_change_path(@conn, :index, @image)
-
-  = render PhilomenaWeb.TagChangeView, "index.html", conn: @conn, tag_changes: @tag_changes, pagination: pagination
+.block= render PhilomenaWeb.TagChangeView, "index.html", conn: @conn, batches: @batches, pagination: pagination

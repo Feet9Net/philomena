@@ -6,6 +6,7 @@ defmodule Philomena.TagChanges.TagChange do
     belongs_to :user, Philomena.Users.User
     belongs_to :tag, Philomena.Tags.Tag
     belongs_to :image, Philomena.Images.Image
+    belongs_to :tag_change_batch, Philomena.TagChanges.Batch
 
     field :ip, EctoNetwork.INET
     field :fingerprint, :string
