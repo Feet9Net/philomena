@@ -11,22 +11,18 @@
       "bold": true
     },
     {
-      "title": "Privacy Policy",
-      "url": "/pages/privacy",
-      "bold": true
-    },
-    {
       "title": "Tag Guidelines",
       "url": "/pages/tags",
       "bold": true
     },
     {
-      "title": "About Uploading",
-      "url": "/pages/uploading"
+      "title": "Privacy Policy",
+      "url": "/pages/privacy",
+      "bold": true
     },
     {
-      "title": "Spoiler Guidelines",
-      "url": "/pages/spoilers"
+      "title": "About Uploading",
+      "url": "/pages/uploading"
     },
     {
       "title": "Takedown Requests",
@@ -39,8 +35,13 @@
   ],
   "Help & Information": [
     {
+      "title": "Getting Started",
+      "url": "/pages/start",
+      "bold": true
+    },
+    {
       "title": "Changelog",
-      "url": "https://github.com/derpibooru/philomena/commits/master",
+      "url": "https://github.com/feet9net/philomena/commits/master",
       "bold": true,
       "target": "_blank"
     },
@@ -62,8 +63,8 @@
       "url": "/pages/advertising"
     },
     {
-      "title": "Onion Service",
-      "url": "/pages/onion"
+      "title": "About",
+      "url": "/pages/about"
     }
   ],
   "Community": [
@@ -84,15 +85,6 @@
     {
       "title": "Statistics",
       "url": "/pages/stats"
-    },
-    {
-      "title": "About",
-      "url": "/pages/about"
-    },
-    {
-      "title": "Twitter",
-      "url": "https://twitter.com/Derpibooru",
-      "target": "_blank"
     }
   ]
 }

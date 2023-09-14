@@ -159,8 +159,12 @@ defmodule PhilomenaWeb.AppView do
     end
   end
 
-  def communication_body_class(%{destroyed_content: true}), do: "communication--destroyed"
+  def communication_body_class(%{destroyed_content: true}), do: "alternating-color destroyed_content"
+  def communication_body_class(%{hidden_from_users: true}), do: "communication--hidden"
   def communication_body_class(_communication), do: nil
+
+  def communication_content_class(%{hidden_from_users: true}), do: "communication__body--hidden"
+  def communication_content_class(_communication), do: nil
 
   def can_view_communication?(conn, communication) do
     user_id =

@@ -353,7 +353,7 @@ defmodule Philomena.Users.User do
       :show_sidebar_and_watched_images
     ])
     |> TagList.propagate_tag_list(:watched_tag_list, :watched_tag_ids)
-    |> validate_inclusion(:theme, ~W(default dark red))
+    |> validate_inclusion(:theme, ~W(default dark light))
     |> validate_inclusion(:images_per_page, 1..50)
     |> validate_inclusion(:comments_per_page, 1..100)
     |> validate_inclusion(:scale_large_images, ["false", "partscaled", "true"])
@@ -520,11 +520,11 @@ defmodule Philomena.Users.User do
     provisioning_uri = %URI{
       scheme: "otpauth",
       host: "totp",
-      path: "/Derpibooru:" <> user.email,
+      path: "/Feet9:" <> user.email,
       query:
         URI.encode_query(%{
           secret: secret,
-          issuer: "Derpibooru"
+          issuer: "Feet9"
         })
     }
 

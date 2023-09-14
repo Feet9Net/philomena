@@ -21,7 +21,7 @@ defmodule PhilomenaWeb.ImageController do
   import Ecto.Query
 
   plug PhilomenaWeb.LimitPlug,
-       [time: 5, error: "You may only upload images once every 5 seconds."]
+       [time: 3, error: "You may only upload images once every 3 seconds."]
        when action in [:create]
 
   plug :load_image when action in [:show]
@@ -38,7 +38,7 @@ defmodule PhilomenaWeb.ImageController do
 
   def index(conn, _params) do
     {:ok, {images, _tags}} =
-      ImageLoader.search_string(conn, "created_at.lte:3 minutes ago, -thumbnails_generated:false")
+      ImageLoader.search_string(conn, "created_at.lte:2 minutes ago, -thumbnails_generated:false")
 
     images = Elasticsearch.search_records(images, preload(Image, [:sources, tags: :aliases]))
 

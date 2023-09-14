@@ -34,7 +34,8 @@ config :philomena,
   proxy_host: System.get_env("PROXY_HOST"),
   camo_host: System.get_env("CAMO_HOST"),
   camo_key: System.get_env("CAMO_KEY"),
-  cdn_host: System.fetch_env!("CDN_HOST")
+  cdn_host: System.fetch_env!("CDN_HOST"),
+  min_number_of_tags: 5
 
 app_dir = System.get_env("APP_DIR", File.cwd!())
 

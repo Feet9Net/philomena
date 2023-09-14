@@ -301,7 +301,7 @@ defmodule PhilomenaWeb.ImageView do
     uri = URI.parse(source)
 
     case uri.host do
-      u when u in ["twitter.com", "www.twitter.com", "pbs.twimg.com", "twimg.com"] ->
+      u when u in ["twitter.com", "www.twitter.com", "pbs.twimg.com", "twimg.com", "x.com"] ->
         "fab fa-twitter"
 
       u when u in ["deviantart.com", "www.deviantart.com", "sta.sh", "www.sta.sh"] ->
@@ -356,6 +356,13 @@ defmodule PhilomenaWeb.ImageView do
 
       u
       when u in [
+             "feet9.net",
+             "www.feet9.net"
+           ] ->
+        "fa fa-socks"
+
+      u
+      when u in [
              "awoo.space",
              "bark.lgbt",
              "equestria.social",
@@ -367,9 +374,7 @@ defmodule PhilomenaWeb.ImageView do
              "pettingzoo.co",
              "pony.social",
              "vulpine.club",
-             "yiff.life",
-             "socel.net",
-             "octodon.social"
+             "yiff.life"
            ] ->
         "fab fa-mastodon"
 
@@ -379,6 +384,9 @@ defmodule PhilomenaWeb.ImageView do
           String.contains?(link, "tumblr") -> "fab fa-tumblr"
           String.contains?(link, "deviantart") -> "fab fa-deviantart"
           String.contains?(link, "sofurry") -> "fa fa-paw"
+          String.contains?(link, "sostinky") -> "fa fa-socks"
+          String.contains?(link, "feet") -> "fa fa-socks"
+          String.contains?(link, "sosmelly") -> "fa fa-socks"
           true -> "fa fa-link"
         end
     end

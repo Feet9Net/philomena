@@ -16,7 +16,7 @@ footer#footer
 
   #serving_info
     ' Powered by
-    a> href="https://github.com/philomena-dev/philomena" philomena
+    a> href="https://github.com/feet9net/philomena" Philomena (Feet9.net Fork)
     | (
     = render_time(@conn)
     | ms)

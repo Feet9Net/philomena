@@ -406,6 +406,18 @@ figure {
   justify-content: center;
 }
 
+.deleted_content_avatar_spacer {
+  width: 100px;
+  
+  .block__content {
+    border: 0 !important;
+  }
+
+  .communication__options {
+    background: 0 !important;
+  }
+}
+
 .minimal__message {
   padding: 30px;
   max-width: 560px;
